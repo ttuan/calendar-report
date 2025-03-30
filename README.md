@@ -1,20 +1,38 @@
 # Calendar Analysis App 📊
 
 <div align="center">
-  <img src="public/images/logo.svg" alt="Calendar Analysis Logo" width="200"/>
+  <a href="#calendar-analysis-app-">
+    <picture>
+      <source srcset="public/images/logo.svg" type="image/svg+xml">
+      <img src="https://shields.io/badge/calendar-analysis-4285F4?logo=google-calendar&style=for-the-badge" alt="Calendar Analysis Logo" width="200"/>
+    </picture>
+  </a>
   <br><br>
-  
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![Ruby Version](https://img.shields.io/badge/ruby-3.0%2B-ruby.svg)](https://www.ruby-lang.org/en/)
-  [![Sinatra](https://img.shields.io/badge/sinatra-2.0%2B-red.svg)](http://sinatrarb.com/)
-  [![Google Calendar](https://img.shields.io/badge/Google-Calendar%20API-4285F4.svg)](https://developers.google.com/calendar)
+
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/static/v1?label=License&message=MIT&color=blue&style=flat-square" alt="License: MIT">
+  </a>
+  <a href="https://www.ruby-lang.org/en/">
+    <img src="https://img.shields.io/static/v1?label=Ruby&message=3.0%2B&color=CC342D&logo=ruby&style=flat-square" alt="Ruby Version">
+  </a>
+  <a href="http://sinatrarb.com/">
+    <img src="https://img.shields.io/static/v1?label=Sinatra&message=2.0%2B&color=black&logo=ruby&style=flat-square" alt="Sinatra">
+  </a>
+  <a href="https://developers.google.com/calendar">
+    <img src="https://img.shields.io/static/v1?label=Google&message=Calendar+API&color=4285F4&logo=google&style=flat-square" alt="Google Calendar">
+  </a>
 </div>
 
 A Ruby-based web application that provides analytics and visualization of your Google Calendar events. Track how you spend your time across different calendars with day, week, and month views.
 
-<p align="center">
-  <img src="public/images/screenshot.svg" alt="App Screenshot" width="80%"/>
-</p>
+<div align="center">
+  <a href="#calendar-analysis-app-">
+    <picture>
+      <source srcset="public/images/screenshot.png" type="image/svg+xml">
+      <img src="https://via.placeholder.com/800x500.png?text=Calendar+Analysis+App" alt="App Screenshot" width="80%"/>
+    </picture>
+  </a>
+</div>
 
 ## 🌟 Features
 
@@ -90,17 +108,17 @@ A Ruby-based web application that provides analytics and visualization of your G
      -e REDIRECT_URI=your_redirect_uri \
      calendar-analyzer
    ```
-</details>
+   </details>
 
 ## 🏗️ Architecture
 
-| Component | Technology |
-|-----------|------------|
-| **Backend** | Sinatra (Ruby) |
-| **Data Source** | Google Calendar API |
-| **Visualization** | Chart.js |
-| **Date Handling** | ActiveSupport |
-| **Authentication** | OAuth2 |
+| Component          | Technology          |
+| ------------------ | ------------------- |
+| **Backend**        | Sinatra (Ruby)      |
+| **Data Source**    | Google Calendar API |
+| **Visualization**  | Chart.js            |
+| **Date Handling**  | ActiveSupport       |
+| **Authentication** | OAuth2              |
 
 ## ⚠️ Troubleshooting
 
@@ -121,4 +139,3 @@ MIT License
 <p align="center">
   Made with ❤️ by <a href="https://github.com/ttuan">ttuan</a>
 </p>
-

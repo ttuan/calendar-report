@@ -51,6 +51,37 @@ A Ruby-based web application that provides analytics and visualization of your G
 - Google Cloud Platform account with Calendar API enabled
 - Google OAuth 2.0 credentials (client ID and client secret)
 
+### Google Cloud Console Setup
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google Calendar API:
+   - Navigate to "APIs & Services" > "Library"
+   - Search for "Google Calendar API" and select it
+   - Click "Enable"
+
+4. Set up OAuth Consent Screen:
+   - Go to "APIs & Services" > "OAuth consent screen"
+   - Select "External" user type (or "Internal" if using Google Workspace)
+   - Complete the required fields (App name, User support email, Developer contact information)
+   - Add the necessary scopes: `https://www.googleapis.com/auth/calendar.readonly`
+   - Add your email as a test user
+   - Click "Save and Continue"
+
+5. Create OAuth Credentials:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Web application" as the application type
+   - Set a name for your OAuth client
+   - Add authorized redirect URIs:
+     - For local development: `http://localhost:4567/auth/google_oauth2/callback`
+     - For production: `https://your-domain.com/auth/google_oauth2/callback`
+   - Click "Create"
+   - Note your Client ID and Client Secret for later use
+
+6. Secure Your Credentials:
+   - Store the client ID and client secret in environment variables or .env file (not in version control)
+
 ### Installation
 
 1. Clone the repository:

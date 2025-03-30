@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calendar Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #e0e0e0;
+    }
+    
+    .card {
+      background-color: #282828;
+      border-color: #333;
+    }
+    
+    .card-title {
+      color: #e0e0e0;
+    }
+    
+    .form-control, .form-select {
+      background-color: #333;
+      border-color: #444;
+      color: #e0e0e0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+      background-color: #3a3a3a;
+      color: #e0e0e0;
+      border-color: #5fb382;
+    }
+    
+    .btn-primary {
+      background-color: #5fb382;
+      border-color: #5fb382;
+    }
+    
+    .btn-primary:hover {
+      background-color: #33753e;
+      border-color: #33753e;
+    }
+    
+    .btn-secondary {
+      background-color: #3c8499;
+      border-color: #3c8499;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #2d6375;
+      border-color: #2d6375;
+    }
+    
+    .btn-danger {
+      background-color: #c63c47;
+      border-color: #c63c47;
+    }
+    
+    .btn-danger:hover {
+      background-color: #a53038;
+      border-color: #a53038;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+      margin-top: 20px;
+      background-color: #2a2a2a;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .calendar-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .calendar-checkbox {
+      margin-right: 8px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      margin-right: 15px;
+      padding: 5px;
+      border-radius: 4px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      margin-right: 8px;
+      border-radius: 3px;
+    }
+    
+    .list-group-item {
+      background-color: #333;
+      border-color: #444;
+      color: #e0e0e0;
+    }
+    
+    .list-group-item.bg-light {
+      background-color: #474544 !important;
+      color: #fff;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #2a2a2a;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #5fb382;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #33753e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1>Calendar Analysis</h1>
+      <a href="/logout" class="btn btn-danger">Logout</a>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Select Calendars</h5>
+            <div class="mb-2">
+              <button type="button" class="btn btn-sm btn-primary" id="selectAll">Select All</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="unselectAll">Unselect All</button>
+            </div>
+            <div class="calendar-list">
+              <% @calendars.each do |calendar| %>
+                <div class="form-check">
+                  <input class="form-check-input calendar-checkbox" type="checkbox" 
+                         value="<%= calendar[:id] %>" id="calendar_<%= calendar[:id] %>" checked>
+                  <label class="form-check-label" for="calendar_<%= calendar[:id] %>">
+                    <%= calendar[:display_name] || calendar[:name] %>
+                  </label>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="card-body">
+            <h5 class="card-title">Analysis Summary</h5>
+            <div id="analysis-summary">
+              <p>Select calendars and analyze to see summary</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Analysis Settings</h5>
+            <form id="analyzeForm">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date"
+                           value="<%= (Date.today - 3.months).strftime('%Y-%m-%d') %>">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date"
+                           value="<%= Date.today.strftime('%Y-%m-%d') %>">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label for="group_by" class="form-label">Group By</label>
+                    <select class="form-select" id="group_by" name="group_by">
+                      <option value="day">Day</option>
+                      <option value="week">Week</option>
+                      <option value="month">Month</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Analyze</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title">Results</h5>
+            <div id="chart-container" class="chart-container">
+              <canvas id="timeChart"></canvas>
+            </div>
+            <div id="chart-legend" class="mt-3 d-flex flex-wrap"></div>
+          </div>
+        </div>
+        
+        <div class="card mt-3">
+          <div class="card-body">
+            <button class="btn btn-sm btn-secondary" id="toggleDebug">Toggle Debug Info</button>
+            <div id="debug-info" class="mt-2" style="display: none; max-height: 300px; overflow: auto;">
+              <pre id="debug-json" class="bg-light p-2 rounded small"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let timeChart = null;
+    let chartData = null;
+
+    // Debug toggle
+    document.getElementById('toggleDebug').addEventListener('click', function() {
+      const debugInfo = document.getElementById('debug-info');
+      if (debugInfo.style.display === 'none') {
+        debugInfo.style.display = 'block';
+        document.getElementById('debug-json').textContent = JSON.stringify(chartData, null, 2);
+      } else {
+        debugInfo.style.display = 'none';
+      }
+    });
+
+    // Select/unselect all calendars
+    document.getElementById('selectAll').addEventListener('click', function() {
+      document.querySelectorAll('.calendar-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+      });
+    });
+
+    document.getElementById('unselectAll').addEventListener('click', function() {
+      document.querySelectorAll('.calendar-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+    });
+
+    document.getElementById('analyzeForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const selectedCalendars = Array.from(document.querySelectorAll('.calendar-checkbox:checked'))
+        .map(checkbox => checkbox.value);
+
+      if (selectedCalendars.length === 0) {
+        alert('Please select at least one calendar');
+        return;
+      }
+
+      const startDate = document.getElementById('start_date').value;
+      const endDate = document.getElementById('end_date').value;
+      const groupBy = document.getElementById('group_by').value;
+
+      if (!startDate || !endDate) {
+        alert('Please select both start and end dates');
+        return;
+      }
+
+      if (startDate > endDate) {
+        alert('Start date must be before end date');
+        return;
+      }
+
+      // Destroy existing chart if it exists
+      if (timeChart) {
+        timeChart.destroy();
+        timeChart = null;
+      }
+
+      const formData = {
+        start_date: startDate,
+        end_date: endDate,
+        calendars: selectedCalendars,
+        group_by: groupBy
+      };
+
+      console.log('Sending data:', formData);
+
+      fetch('/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        console.log('Received data:', data);
+        chartData = data;
+        
+        createStackedChart(data, groupBy);
+        updateSummary(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while analyzing the calendars');
+      });
+    });
+
+    function createStackedChart(data, groupBy) {
+      // Convert seconds to hours for display
+      const datasets = data.datasets.map(dataset => {
+        const color = dataset.borderColor;
+        return {
+          label: dataset.label,
+          data: dataset.data.map(value => (value / 3600).toFixed(2)), // Convert seconds to hours
+          borderColor: color,
+          backgroundColor: adjustOpacity(color, 0.7),
+          borderWidth: 1
+        };
+      });
+
+      const ctx = document.getElementById('timeChart').getContext('2d');
+      timeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              stacked: true,
+              title: {
+                display: true,
+                text: groupBy === 'day' ? 'Date' : groupBy === 'week' ? 'Week' : 'Month',
+                color: '#e0e0e0'
+              },
+              grid: {
+                color: 'rgba(200, 200, 200, 0.1)'
+              },
+              ticks: {
+                color: '#e0e0e0'
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Hours',
+                color: '#e0e0e0'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value.toFixed(1); // Show 1 decimal place
+                },
+                color: '#e0e0e0'
+              },
+              grid: {
+                color: 'rgba(200, 200, 200, 0.1)'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false // Hide the default legend
+            },
+            tooltip: {
+              backgroundColor: 'rgba(40, 40, 40, 0.9)',
+              titleColor: '#e0e0e0',
+              bodyColor: '#e0e0e0',
+              borderColor: '#444',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  const hours = parseFloat(context.raw);
+                  if (hours < 0.017) { // Less than 1 minute
+                    return `${context.dataset.label}: < 1 minute`;
+                  }
+                  if (hours < 1) { // Less than 1 hour
+                    const minutes = Math.round(hours * 60);
+                    return `${context.dataset.label}: ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+                  }
+                  return `${context.dataset.label}: ${hours.toFixed(1)} hours`;
+                },
+                footer: function(tooltipItems) {
+                  // Calculate total for this date
+                  const total = tooltipItems.reduce((sum, item) => sum + parseFloat(item.raw), 0);
+                  if (total < 0.017) { // Less than 1 minute
+                    return 'Total: < 1 minute';
+                  }
+                  if (total < 1) { // Less than 1 hour
+                    const minutes = Math.round(total * 60);
+                    return `Total: ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+                  }
+                  return `Total: ${total.toFixed(1)} hours`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Create custom legend
+      createCustomLegend(datasets);
+    }
+
+    // Helper function to adjust opacity of hex colors
+    function adjustOpacity(hexColor, opacity) {
+      // Extract RGB values
+      let r = parseInt(hexColor.slice(1, 3), 16);
+      let g = parseInt(hexColor.slice(3, 5), 16);
+      let b = parseInt(hexColor.slice(5, 7), 16);
+      
+      // Return rgba format
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+
+    function createCustomLegend(datasets) {
+      const legendContainer = document.getElementById('chart-legend');
+      legendContainer.innerHTML = '';
+      
+      const legendWrapper = document.createElement('div');
+      legendWrapper.className = 'd-flex flex-wrap gap-2';
+      
+      datasets.forEach(dataset => {
+        // Skip datasets with all zeros
+        const hasData = dataset.data.some(value => parseFloat(value) > 0);
+        if (!hasData) return;
+        
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.style.cursor = 'pointer';
+        
+        const colorBox = document.createElement('div');
+        colorBox.className = 'legend-color';
+        colorBox.style.backgroundColor = dataset.backgroundColor;
+        colorBox.style.border = `1px solid ${dataset.borderColor}`;
+        
+        const label = document.createElement('span');
+        label.textContent = dataset.label;
+        
+        // Calculate total hours for this calendar
+        const totalHours = dataset.data.reduce((sum, val) => sum + parseFloat(val), 0);
+        let timeDisplay;
+        
+        if (totalHours < 0.017) {
+          timeDisplay = '< 1m';
+        } else if (totalHours < 1) {
+          timeDisplay = `${Math.round(totalHours * 60)}m`;
+        } else {
+          timeDisplay = `${totalHours.toFixed(1)}h`;
+        }
+        
+        const hours = document.createElement('span');
+        hours.className = 'ms-2 badge bg-dark';
+        hours.textContent = timeDisplay;
+        
+        item.appendChild(colorBox);
+        item.appendChild(label);
+        item.appendChild(hours);
+        
+        // Add click event to toggle visibility
+        item.addEventListener('click', function() {
+          const index = timeChart.data.datasets.findIndex(d => d.label === dataset.label);
+          if (index !== -1) {
+            // Toggle visibility
+            const meta = timeChart.getDatasetMeta(index);
+            meta.hidden = !meta.hidden;
+            
+            // Update legend item style
+            if (meta.hidden) {
+              item.style.opacity = '0.5';
+              colorBox.style.backgroundColor = 'transparent';
+            } else {
+              item.style.opacity = '1';
+              colorBox.style.backgroundColor = dataset.backgroundColor;
+            }
+            
+            timeChart.update();
+          }
+        });
+        
+        legendWrapper.appendChild(item);
+      });
+      
+      legendContainer.appendChild(legendWrapper);
+    }
+
+    function updateSummary(data) {
+      const summaryContainer = document.getElementById('analysis-summary');
+      
+      // Calculate total hours per calendar
+      const totals = data.datasets.map(dataset => {
+        const totalHours = dataset.data.reduce((sum, value) => sum + value, 0) / 3600;
+        return {
+          calendar: dataset.label,
+          totalHours: totalHours
+        };
+      });
+      
+      let html = '<ul class="list-group">';
+      totals.forEach(item => {
+        const hours = item.totalHours;
+        let timeDisplay;
+        
+        if (hours < 0.017) { // Less than 1 minute
+          timeDisplay = '< 1 minute';
+        } else if (hours < 1) { // Less than 1 hour
+          const minutes = Math.round(hours * 60);
+          timeDisplay = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        } else {
+          timeDisplay = `${hours.toFixed(1)} hours`;
+        }
+        
+        html += `<li class="list-group-item d-flex justify-content-between">
+          <span>${item.calendar}</span>
+          <strong>${timeDisplay}</strong>
+        </li>`;
+      });
+      
+      // Add total of all calendars
+      const grandTotal = totals.reduce((sum, item) => sum + item.totalHours, 0);
+      let totalTimeDisplay;
+      
+      if (grandTotal < 0.017) { // Less than 1 minute
+        totalTimeDisplay = '< 1 minute';
+      } else if (grandTotal < 1) { // Less than 1 hour
+        const minutes = Math.round(grandTotal * 60);
+        totalTimeDisplay = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+      } else {
+        totalTimeDisplay = `${grandTotal.toFixed(1)} hours`;
+      }
+      
+      html += `<li class="list-group-item d-flex justify-content-between bg-light">
+        <span><strong>Total</strong></span>
+        <strong>${totalTimeDisplay}</strong>
+      </li>`;
+      
+      html += '</ul>';
+      
+      summaryContainer.innerHTML = html;
+    }
+
+    // Trigger analysis on page load
+    window.addEventListener('load', function() {
+      document.getElementById('analyzeForm').dispatchEvent(new Event('submit'));
+    });
+  </script>
+</body>
+</html> 

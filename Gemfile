@@ -1,0 +1,11 @@
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'google-api-client', '~> 0.53.0'
+gem 'chartkick'
+gem 'activesupport'
+gem 'dotenv'
+gem 'json'
+gem 'thin'
+gem 'securerandom', '~> 0.4.1'
+gem 'pry'

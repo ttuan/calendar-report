@@ -46,17 +46,72 @@ class CalendarAnalyzer
   private
 
   def process_events(events)
-    events.map do |event|
+    result = []
+    
+    events.each do |event|
       start_time = event.start.date_time || event.start.date
       end_time = event.end.date_time || event.end.date
-
-      {
-        title: event.summary || "(No title)",
-        start: start_time,
-        end: end_time,
-        duration: calculate_duration(start_time, end_time)
-      }
+      
+      # Skip if not time-based events
+      next unless start_time.is_a?(Time) || start_time.is_a?(DateTime)
+      next unless end_time.is_a?(Time) || end_time.is_a?(DateTime)
+      
+      # Convert to Time objects
+      start_time = start_time.to_time
+      end_time = end_time.to_time
+      
+      # If the event spans multiple days, split it by day
+      if start_time.to_date != end_time.to_date
+        puts "Splitting multi-day event: #{event.summary} (#{start_time} to #{end_time})"
+        
+        current_date = start_time.to_date
+        end_date = end_time.to_date
+        
+        # Process each day separately
+        while current_date <= end_date
+          day_start = if current_date == start_time.to_date
+                        start_time # Use original start time for the first day
+                      else
+                        current_date.beginning_of_day # Use start of day for subsequent days
+                      end
+                      
+          day_end = if current_date == end_time.to_date
+                      end_time # Use original end time for the last day
+                    else
+                      current_date.end_of_day # Use end of day for intermediate days
+                    end
+          
+          # Calculate duration for this day part
+          day_duration = (day_end - day_start).to_i
+          
+          result << {
+            title: event.summary || "(No title)",
+            start: day_start,
+            end: day_end,
+            duration: day_duration,
+            day: current_date
+          }
+          
+          puts "Added day part: #{current_date} - duration: #{day_duration} seconds"
+          
+          # Move to next day
+          current_date = current_date.next_day
+        end
+      else
+        # For same-day events, process normally
+        duration = (end_time - start_time).to_i
+        
+        result << {
+          title: event.summary || "(No title)",
+          start: start_time,
+          end: end_time,
+          duration: duration,
+          day: start_time.to_date
+        }
+      end
     end
+    
+    result
   end
 
   def create_credentials
@@ -124,20 +179,6 @@ class CalendarAnalyzer
       puts "Error message: #{e.message}"
       puts "Error body: #{e.body}" if e.body
       raise e
-    end
-  end
-
-  def calculate_duration(start_time, end_time)
-    # Only calculate duration for events with specific times (not all-day events)
-    if start_time.is_a?(Time) || start_time.is_a?(DateTime)
-      # Convert to Time objects and calculate seconds difference
-      duration_seconds = (end_time.to_time - start_time.to_time).to_i
-      puts "Time event: #{start_time} to #{end_time} = #{duration_seconds} seconds"
-      duration_seconds
-    else
-      # For all-day events or any other format, return 0 duration
-      puts "All-day event or unknown format - not counting duration: #{start_time.class}"
-      0
     end
   end
 end

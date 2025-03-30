@@ -33,30 +33,21 @@ class ChartGenerator
     # Skip events with zero duration
     return if event[:duration] == 0
 
-    # Convert to dates for grouping
-    start_date = event[:start].respond_to?(:to_date) ? event[:start].to_date : event[:start]
-    end_date = event[:end].respond_to?(:to_date) ? event[:end].to_date : event[:end]
-
-    # For single-day events
-    if start_date == end_date
-      result[start_date] ||= 0
-      result[start_date] += event[:duration]
+    # Use the day field that was added in the process_events method
+    if event[:day]
+      date = event[:day]
+      result[date] ||= 0
+      result[date] += event[:duration]
       return
     end
 
-    # For multi-day events, distribute duration across days
-    # Since we've eliminated all-day events in the analyzer, we're only dealing
-    # with regular events that span multiple days
-
-    # Calculate total duration and distribute proportionally
-    days_count = (end_date - start_date).to_i + 1
-    daily_duration = event[:duration] / days_count.to_f
-
-    # Distribute evenly across the days
-    (start_date..end_date).each do |date|
-      result[date] ||= 0
-      result[date] += daily_duration.to_i
-    end
+    # Fallback to the old way for backward compatibility
+    # Convert to dates for grouping
+    start_date = event[:start].respond_to?(:to_date) ? event[:start].to_date : event[:start]
+    
+    # Ensure we're only counting for one day (based on start date)
+    result[start_date] ||= 0
+    result[start_date] += event[:duration]
   end
 
   def group_by_week(events)

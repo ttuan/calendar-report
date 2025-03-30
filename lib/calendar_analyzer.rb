@@ -64,7 +64,7 @@ class CalendarAnalyzer
       client_id: ENV['GOOGLE_CLIENT_ID'],
       client_secret: ENV['GOOGLE_CLIENT_SECRET'],
       scope: Google::Apis::CalendarV3::AUTH_CALENDAR_READONLY,
-      redirect_uri: 'http://localhost:4567/auth/google_oauth2/callback',
+      redirect_uri: ENV['REDIRECT_URI'] || 'http://localhost:4567/auth/google_oauth2/callback',
       access_token: @credentials[:access_token],
       refresh_token: @credentials[:refresh_token]
     )
@@ -91,7 +91,7 @@ class CalendarAnalyzer
 
       all_events = []
       page_token = nil
-      
+
       loop do
         response = @service.list_events(
           calendar_id,
@@ -102,18 +102,18 @@ class CalendarAnalyzer
           max_results: 2500,
           page_token: page_token
         )
-        
+
         all_events.concat(response.items)
-        
+
         # Get the next page token
         page_token = response.next_page_token
-        
+
         # Break the loop if there are no more pages
         break unless page_token
-        
+
         puts "Fetching next page of events for #{calendar_id}, found #{all_events.length} events so far..."
       end
-      
+
       puts "Total #{all_events.length} events found for calendar #{calendar_id}"
       all_events
     rescue Google::Apis::ClientError => e

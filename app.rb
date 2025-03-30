@@ -25,7 +25,7 @@ class CalendarApp < Sinatra::Base
   # OAuth configuration
   GOOGLE_CLIENT_ID = ENV['GOOGLE_CLIENT_ID']
   GOOGLE_CLIENT_SECRET = ENV['GOOGLE_CLIENT_SECRET']
-  REDIRECT_URI = 'http://localhost:4567/auth/google_oauth2/callback'
+  REDIRECT_URI = ENV['REDIRECT_URI'] || 'http://localhost:4567/auth/google_oauth2/callback'
   SCOPE = Google::Apis::CalendarV3::AUTH_CALENDAR_READONLY
 
   # Parse JSON request body
